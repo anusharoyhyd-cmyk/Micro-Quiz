@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cadet Micro-Quiz | CDS/AFCAT Daily Drill</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['Chakra Petch', 'monospace'],
+          },
+          colors: {
+            tactical: {
+              gold: '#EAB308',
+              emerald: '#10B981',
+              crimson: '#EF4444',
+              dark: '#0B0F19',
+              card: '#111827',
+              accent: '#3B82F6'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom CSS Animations */
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+      50% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.5); }
+    }
+    .correct-glow {
+      animation: pulse-glow 1.5s infinite;
+      border-color: #10B981 !important;
+      background-color: rgba(16, 185, 129, 0.15) !important;
+    }
+    .wrong-pulse {
+      border-color: #EF4444 !important;
+      background-color: rgba(239, 68, 68, 0.15) !important;
+    }
+    .tactical-border {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    /* Disable double-tap zoom on mobile */
+    touch-action: manipulation;
+  </style>
+</head>
+<body class="h-full flex flex-col justify-between items-center bg-slate-950 font-sans antialiased select-none p-4 max-w-md mx-auto">
+
+  <!-- Header / Top Bar -->
+  <header class="w-full pt-2 pb-4 border-b border-slate-800 flex justify-between items-center">
+    <div class="flex items-center gap-2">
+      <div class="w-3 h-3 rounded-full bg-amber-500 animate-ping"></div>
+      <span class="font-mono font-bold text-amber-500 tracking-wider text-sm uppercase">CDS Daily Drill</span>
+    </div>
+    <div id="timer" class="font-mono text-xs px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-md text-slate-400">
+      ⏱️ <span id="time-display" class="text-slate-200 font-semibold">00:00</span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main id="app-container" class="w-full my-auto py-4 flex flex-col items-center">
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="w-full text-center space-y-6">
+      <div class="inline-flex p-4 rounded-full bg-slate-900 border border-slate-800 text-amber-500 text-3xl shadow-inner mb-2">
+        🛡️
+      </div>
+      <div>
+        <h1 class="font-mono text-2xl font-bold tracking-tight text-white">READY FOR THE DRILL?</h1>
+        <p class="text-xs text-slate-400 mt-2">Oct 21–23 High-Yield Revision • 4 Quick Questions</p>
+      </div>
+
+      <div class="p-4 bg-slate-900/80 rounded-xl tactical-border text-left space-y-3 text-xs text-slate-300">
+        <div class="flex items-start gap-2.5">
+          <span class="text-amber-500 font-bold">🎯</span>
+          <span>Designed for quick 1-minute recall during small work breaks.</span>
+        </div>
+        <div class="flex items-start gap-2.5">
+          <span class="text-amber-500 font-bold">⚡</span>
+          <span>Instant explanation for quick memory reinforcement.</span>
+        </div>
+      </div>
+
+      <button onclick="startQuiz()" class="w-full py-4 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-mono font-bold text-base rounded-xl transition duration-150 shadow-lg shadow-amber-500/20 tracking-wider">
+        START QUICK DRILL ⚡
+      </button>
+    </div>
+
+    <!-- QUIZ CONTAINER (Hidden Initially) -->
+    <div id="quiz-screen" class="w-full hidden space-y-5">
+      
+      <!-- Progress Bar -->
+      <div class="w-full space-y-1.5">
+        <div class="flex justify-between text-xs font-mono text-slate-400">
+          <span>PROGRESS</span>
+          <span id="question-tracker">1 / 4</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+          <div id="progress-bar" class="h-full bg-amber-500 transition-all duration-300 w-1/4"></div>
+        </div>
+      </div>
+
+      <!-- Question Card -->
+      <div class="p-5 bg-slate-900 rounded-2xl tactical-border space-y-4 shadow-xl">
+        <span id="question-category" class="inline-block px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono text-[10px] uppercase tracking-wider rounded-md">
+          Grammar
+        </span>
+        <h2 id="question-text" class="text-base font-semibold text-white leading-relaxed">
+          Pawan, along with his friends, ____ preparing for the exam.
+        </h2>
+      </div>
+
+      <!-- Options Container -->
+      <div id="options-container" class="space-y-3">
+        <!-- Options generated dynamically -->
+      </div>
+
+      <!-- Explanation Box (Hidden by default) -->
+      <div id="explanation-box" class="hidden p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs space-y-1.5 transition-all">
+        <div id="explanation-title" class="font-bold font-mono"></div>
+        <p id="explanation-text" class="text-slate-300 leading-relaxed"></p>
+        <button id="next-btn" onclick="nextQuestion()" class="w-full mt-3 py-3 bg-amber-500 text-slate-950 font-mono font-bold text-xs uppercase tracking-wider rounded-lg">
+          Next Question ➔
+        </button>
+      </div>
+
+    </div>
+
+    <!-- RESULT SCREEN (Hidden Initially) -->
+    <div id="result-screen" class="w-full hidden text-center space-y-6">
+      
+      <div class="p-6 bg-slate-900/90 rounded-2xl tactical-border space-y-4 shadow-2xl relative overflow-hidden">
+        <div class="absolute -right-8 -top-8 w-24 h-24 bg-amber-500/10 rounded-full blur-xl"></div>
+        
+        <div class="text-4xl">🎖️</div>
+        
+        <div>
+          <h2 id="score-title" class="font-mono text-xl font-bold text-amber-400 uppercase tracking-wide">
+            DEFENCE READY!
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">Daily Micro-Habit Drill Completed</p>
+        </div>
+
+        <div class="py-3 px-4 bg-slate-950/80 rounded-xl border border-slate-800/80 inline-block w-full">
+          <div class="text-3xl font-mono font-bold text-white" id="final-score">4 / 4</div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Time Taken: <span id="final-time" class="text-slate-200 font-mono">00:45</span></div>
+        </div>
+
+        <div id="badge-container" class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs font-semibold text-amber-300">
+          🏆 Officer Mindset Badge Unlocked
+        </div>
+
+        <!-- Heart Note from Anusha -->
+        <div class="p-4 bg-rose-950/20 border border-rose-800/30 rounded-xl text-left text-xs space-y-1">
+          <div class="font-bold text-rose-400 flex items-center gap-1.5">
+            <span>❤️</span> Message from Anusha:
+          </div>
+          <p class="text-slate-300 italic leading-relaxed">
+            "So proud of you baby! Everyday 1% progress hi badhiya momentum banata hai. Take care of yourself today, drink water, and rest up! Love you so much."
+          </p>
+        </div>
+      </div>
+
+      <button onclick="shareResult()" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-slate-950 font-mono font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
+        <span>📲</span> Share Result with Anusha
+      </button>
+
+      <button onclick="restartQuiz()" class="w-full py-2.5 text-slate-400 font-mono text-xs hover:text-white transition">
+        🔄 Retry Quiz
+      </button>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full py-3 border-t border-slate-900 text-center text-[10px] text-slate-500 font-mono">
+    Designed with ❤️ by Anusha • CDS (I) 2027 Target
+  </footer>
+
+  <script>
+    // Quiz Questions Data (Based on Oct 21-23 Notes)
+    const questions = [
+      {
+        category: "Grammar • Subject-Verb Agreement",
+        question: "Pawan, along with his friends, ____ preparing for the exam.",
+        options: [
+          { text: "are", correct: false },
+          { text: "is", correct: true },
+          { text: "were", correct: false },
+          { text: "have been", correct: false }
+        ],
+        explanation: "When subjects are connected by 'along with', 'as well as', or 'together with', the verb always agrees with the FIRST subject ('Pawan' -> singular 'is')."
+      },
+      {
+        category: "Vocabulary • Fill in the Blank",
+        question: "Proper rest will _________ your physical tiredness.",
+        options: [
+          { text: "Prudent", correct: false },
+          { text: "Mitigate", correct: true },
+          { text: "Bolster", correct: false },
+          { text: "Candor", correct: false }
+        ],
+        explanation: "'Mitigate' (Verb) means to make something less severe or lessen pain/stress."
+      },
+      {
+        category: "Idioms & Phrases",
+        question: "What is the true meaning of 'Bite the bullet'?",
+        options: [
+          { text: "To reveal a secret early", correct: false },
+          { text: "To work late into the night", correct: false },
+          { text: "To face a difficult situation bravely", correct: true },
+          { text: "To be exactly right about something", correct: false }
+        ],
+        explanation: "'Bite the bullet' means facing a difficult situation with courage and getting it over with."
+      },
+      {
+        category: "High-Yield Vocabulary",
+        question: "Which word means 'persistent, strong-willed, and determined'?",
+        options: [
+          { text: "Lucid", correct: false },
+          { text: "Meticulous", correct: false },
+          { text: "Tenacious", correct: true },
+          { text: "Resilient", correct: false }
+        ],
+        explanation: "'Tenacious' (Adjective) means persistent and holding firm despite obstacles."
+      }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let startTime;
+    let timerInterval;
+
+    function startQuiz() {
+      document.getElementById('start-screen').classList.add('hidden');
+      document.getElementById('quiz-screen').classList.remove('hidden');
+      
+      currentQuestionIndex = 0;
+      score = 0;
+      startTimer();
+      loadQuestion();
+    }
+
+    function startTimer() {
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const secs = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('time-display').innerText = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function loadQuestion() {
+      const q = questions[currentQuestionIndex];
+      
+      // Update Progress
+      document.getElementById('question-tracker').innerText = `${currentQuestionIndex + 1} / ${questions.length}`;
+      document.getElementById('progress-bar').style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+      
+      // Category & Question Text
+      document.getElementById('question-category').innerText = q.category;
+      document.getElementById('question-text').innerText = q.question;
+      
+      // Hide Explanation Box
+      document.getElementById('explanation-box').classList.add('hidden');
+
+      // Populate Options
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "w-full p-3.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-800 text-left font-medium text-xs text-slate-200 rounded-xl tactical-border transition-all flex items-center justify-between";
+        btn.onclick = () => selectOption(btn, opt.correct, q.explanation);
+        
+        btn.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="w-5 h-5 rounded-full bg-slate-800 text-slate-400 font-mono text-[10px] flex items-center justify-center font-bold">${String.fromCharCode(65 + idx)}</span>
+            <span>${opt.text}</span>
+          </div>
+          <span class="status-icon opacity-0 text-sm"></span>
+        `;
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function selectOption(selectedBtn, isCorrect, explanationText) {
+      // Disable all option buttons
+      const buttons = document.querySelectorAll('#options-container button');
+      buttons.forEach(btn => btn.disabled = true);
+
+      const expBox = document.getElementById('explanation-box');
+      const expTitle = document.getElementById('explanation-title');
+      const expText = document.getElementById('explanation-text');
+
+      if (isCorrect) {
+        score++;
+        selectedBtn.classList.add('correct-glow');
+        selectedBtn.querySelector('.status-icon').innerText = '✅';
+        selectedBtn.querySelector('.status-icon').classList.remove('opacity-0');
+        
+        expTitle.innerText = "🎯 SPOT ON! (CORRECT)";
+        expTitle.className = "font-bold font-mono text-emerald-400";
+        expBox.className = "p-4 rounded-xl bg-emerald-950/20 border border-emerald-800/40 text-xs space-y-1.5";
+      } else {
+        selectedBtn.classList.add('wrong-pulse');
+        selectedBtn.querySelector('.status-icon').innerText = '❌';
+        selectedBtn.querySelector('.status-icon').classList.remove('opacity-0');
+
+        // Highlight correct option
+        const q = questions[currentQuestionIndex];
+        const correctIdx = q.options.findIndex(o => o.correct);
+        if (buttons[correctIdx]) {
+          buttons[correctIdx].classList.add('correct-glow');
+        }
+
+        expTitle.innerText = "💡 QUICK REVISION NOTE:";
+        expTitle.className = "font-bold font-mono text-amber-400";
+        expBox.className = "p-4 rounded-xl bg-slate-900 border border-slate-800 text-xs space-y-1.5";
+      }
+
+      expText.innerText = explanationText;
+      expBox.classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        loadQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    function finishQuiz() {
+      clearInterval(timerInterval);
+      const totalTime = document.getElementById('time-display').innerText;
+
+      document.getElementById('quiz-screen').classList.add('hidden');
+      document.getElementById('result-screen').classList.remove('hidden');
+
+      document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
+      document.getElementById('final-time').innerText = totalTime;
+
+      const scoreTitle = document.getElementById('score-title');
+      const badgeContainer = document.getElementById('badge-container');
+
+      if (score === 4) {
+        scoreTitle.innerText = "OUTSTANDING PERFORMANCE! 🫡";
+        badgeContainer.innerText = "🏆 Defense Officer Readiness: EXCELLENT";
+      } else if (score >= 2) {
+        scoreTitle.innerText = "GOOD EFFORT, CADET! 👍";
+        badgeContainer.innerText = "⚡ Defense Officer Readiness: ON TRACK";
+      } else {
+        scoreTitle.innerText = "WARM-UP COMPLETE! 💪";
+        badgeContainer.innerText = "🌱 Daily Progress Made";
+      }
+    }
+
+    function restartQuiz() {
+      document.getElementById('result-screen').classList.add('hidden');
+      document.getElementById('start-screen').classList.remove('hidden');
+    }
+
+    function shareResult() {
+      const finalScore = document.getElementById('final-score').innerText;
+      const finalTime = document.getElementById('final-time').innerText;
+      const text = `Hey Anusha! I completed today's 1-minute CDS/AFCAT quiz. My Score: ${finalScore} in ${finalTime}! ❤️`;
+      
+      // Fallback copy logic
+      const tempInput = document.createElement("textarea");
+      tempInput.value = text;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+
+      alert("Result copied to clipboard! You can paste and send it to Anusha now. ❤️");
+    }
+  </script>
+</body>
+</html>
